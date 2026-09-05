@@ -1,0 +1,2471 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Bank Statement Analyzer</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #f5f7fb;
+
+            color: #222;
+        }
+
+
+        .container {
+
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding: 30px;
+        }
+
+
+        /* ================================
+           HEADER
+        ================================= */
+
+        header {
+
+            margin-bottom: 25px;
+        }
+
+
+        header h1 {
+
+            margin: 0;
+
+            font-size: 32px;
+        }
+
+
+        header p {
+
+            color: #666;
+
+            margin-top: 8px;
+        }
+
+
+        /* ================================
+           STATUS
+        ================================= */
+
+        #status {
+
+            margin-bottom: 20px;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            background: #eee;
+
+            display: none;
+
+            line-height: 1.5;
+        }
+
+
+        /* ================================
+           UPLOAD SECTION
+        ================================= */
+
+        .upload-section {
+
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0, 0, 0, 0.08);
+
+            margin-bottom: 30px;
+        }
+
+
+        .upload-section h2 {
+
+            margin-top: 0;
+
+            margin-bottom: 10px;
+        }
+
+
+        .upload-description {
+
+            color: #666;
+
+            margin-bottom: 20px;
+        }
+
+
+        .upload-controls {
+
+            display: flex;
+
+            gap: 15px;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+        }
+
+
+        #pdfFile {
+
+            padding: 10px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 8px;
+
+            background: #fafafa;
+
+            max-width: 100%;
+        }
+
+
+        #uploadButton {
+
+            padding: 11px 20px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            background: #222;
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 15px;
+
+            font-weight: bold;
+        }
+
+
+        #uploadButton:hover {
+
+            opacity: 0.85;
+        }
+
+
+        #uploadButton:disabled {
+
+            opacity: 0.5;
+
+            cursor: not-allowed;
+        }
+
+
+        #uploadResult {
+
+            margin-top: 15px;
+
+            display: none;
+
+            padding: 15px;
+
+            border-radius: 8px;
+
+            line-height: 1.6;
+        }
+
+
+        .upload-success {
+
+            background: #eaf7ee;
+
+            border: 1px solid #b8e0c2;
+        }
+
+
+        .upload-error {
+
+            background: #fdecec;
+
+            border: 1px solid #efb5b5;
+        }
+
+
+        /* ================================
+           STATEMENT INFO
+        ================================= */
+
+        .statement-info {
+
+            background: white;
+
+            padding: 18px 22px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0, 0, 0, 0.08);
+
+            margin-bottom: 30px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+        }
+
+
+        .statement-title {
+
+            font-size: 14px;
+
+            color: #666;
+
+            margin-bottom: 5px;
+        }
+
+
+        .statement-file {
+
+            font-size: 17px;
+
+            font-weight: bold;
+        }
+
+
+        .statement-id {
+
+            font-size: 14px;
+
+            color: #666;
+        }
+
+
+        /* ================================
+           KPI CARDS
+        ================================= */
+
+        .cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 20px;
+
+            margin-bottom: 30px;
+        }
+
+
+        .card {
+
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0, 0, 0, 0.08);
+        }
+
+
+        .card h3 {
+
+            margin: 0 0 12px;
+
+            font-size: 15px;
+
+            color: #666;
+
+            font-weight: normal;
+        }
+
+
+        .value {
+
+            font-size: 28px;
+
+            font-weight: bold;
+        }
+
+
+        /* ================================
+           SECTIONS
+        ================================= */
+
+        .section {
+
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0, 0, 0, 0.08);
+
+            margin-bottom: 30px;
+        }
+
+
+        .section h2 {
+
+            margin-top: 0;
+
+            margin-bottom: 20px;
+        }
+
+
+        /* ================================
+           HIGHEST EXPENSE
+        ================================= */
+
+        .highest-expense {
+
+            font-size: 16px;
+
+            line-height: 1.8;
+        }
+
+
+        .highest-amount {
+
+            font-size: 30px;
+
+            font-weight: bold;
+
+            margin-bottom: 10px;
+        }
+
+
+        /* ================================
+           INSIGHTS
+        ================================= */
+
+        .insight-item {
+
+            padding: 12px 0;
+
+            border-bottom:
+                1px solid #eee;
+
+            font-size: 16px;
+
+            line-height: 1.6;
+        }
+
+
+        .insight-item:last-child {
+
+            border-bottom: none;
+        }
+
+
+        /* ================================
+           CHARTS
+        ================================= */
+
+        .chart-container {
+
+            position: relative;
+
+            width: 100%;
+
+            height: 350px;
+        }
+
+
+        canvas {
+
+            max-width: 100%;
+        }
+
+
+        /* ================================
+           CATEGORY
+        ================================= */
+
+        .category-row {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            padding: 14px 0;
+
+            border-bottom:
+                1px solid #eee;
+        }
+
+
+        .category-name {
+
+            font-weight: 500;
+        }
+
+
+        .category-amount {
+
+            font-weight: bold;
+        }
+
+
+        /* ================================
+           TABLE
+        ================================= */
+
+        .table-container {
+
+            overflow-x: auto;
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse:
+                collapse;
+        }
+
+
+        th,
+        td {
+
+            padding: 14px;
+
+            text-align: left;
+
+            border-bottom:
+                1px solid #eee;
+        }
+
+
+        th {
+
+            background: #f5f5f5;
+
+            font-size: 14px;
+        }
+
+
+        td {
+
+            font-size: 14px;
+        }
+
+
+        /* ================================
+           RESPONSIVE
+        ================================= */
+
+        @media (max-width: 1000px) {
+
+            .cards {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .cards {
+
+                grid-template-columns: 1fr;
+            }
+
+
+            .container {
+
+                padding: 15px;
+            }
+
+
+            .statement-info {
+
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+            }
+
+
+            .upload-controls {
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    stretch;
+            }
+
+
+            #pdfFile {
+
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <!-- ================================
+         HEADER
+    ================================= -->
+
+    <header>
+
+        <h1>
+            AI Bank Statement Analyzer
+        </h1>
+
+        <p>
+            Analyze your bank transactions
+            and understand your spending.
+        </p>
+
+    </header>
+
+
+    <!-- ================================
+         STATUS
+    ================================= -->
+
+    <div id="status"></div>
+
+
+    <!-- ================================
+         UPLOAD STATEMENT
+    ================================= -->
+
+    <div class="upload-section">
+
+        <h2>
+            Upload New Bank Statement
+        </h2>
+
+        <div class="upload-description">
+
+            Upload a PDF bank statement to
+            analyze its transactions.
+
+        </div>
+
+
+        <div class="upload-controls">
+
+            <input
+                type="file"
+                id="pdfFile"
+                accept=".pdf,application/pdf"
+            >
+
+
+            <button
+                id="uploadButton"
+                onclick="uploadStatement()"
+            >
+
+                Upload Statement
+
+            </button>
+
+        </div>
+
+
+        <div id="uploadResult"></div>
+
+    </div>
+
+
+    <!-- ================================
+         CURRENT STATEMENT
+    ================================= -->
+
+    <div class="statement-info">
+
+        <div>
+
+            <div class="statement-title">
+
+                Currently Analyzing
+
+            </div>
+
+
+            <div
+                class="statement-file"
+                id="statementFile"
+            >
+
+                Loading...
+
+            </div>
+
+        </div>
+
+
+        <div>
+
+            <div
+                class="statement-id"
+                id="statementId"
+            >
+
+                Statement ID: -
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         KPI CARDS
+    ================================= -->
+
+    <div class="cards">
+
+
+        <div class="card">
+
+            <h3>
+                Total Transactions
+            </h3>
+
+            <div
+                class="value"
+                id="totalTransactions"
+            >
+
+                Loading...
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Total Income
+            </h3>
+
+            <div
+                class="value"
+                id="totalCredit"
+            >
+
+                Loading...
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Total Expenses
+            </h3>
+
+            <div
+                class="value"
+                id="totalDebit"
+            >
+
+                Loading...
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Current Balance
+            </h3>
+
+            <div
+                class="value"
+                id="balance"
+            >
+
+                Loading...
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- ================================
+         HIGHEST EXPENSE
+    ================================= -->
+
+    <div class="section">
+
+        <h2>
+            Highest Expense
+        </h2>
+
+
+        <div
+            id="highestExpense"
+            class="highest-expense"
+        >
+
+            Loading...
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         FINANCIAL INSIGHTS
+    ================================= -->
+
+    <div class="section">
+
+        <h2>
+            Financial Insights
+        </h2>
+
+
+        <div id="insights">
+
+            Loading insights...
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         INCOME VS EXPENSE
+    ================================= -->
+
+    <div class="section">
+
+        <h2>
+            Income vs Expense
+        </h2>
+
+
+        <div class="chart-container">
+
+            <canvas
+                id="incomeExpenseChart"
+            >
+            </canvas>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         MONTHLY SPENDING
+    ================================= -->
+
+    <div class="section">
+
+        <h2>
+            Monthly Spending
+        </h2>
+
+
+        <div class="chart-container">
+
+            <canvas
+                id="monthlySpendingChart"
+            >
+            </canvas>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         CATEGORY SUMMARY
+    ================================= -->
+
+    <div class="section">
+
+        <h2>
+            Spending by Category
+        </h2>
+
+
+        <div id="categorySummary">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================
+         TRANSACTIONS
+    ================================= -->
+
+    <div class="section">
+
+        <h2>
+            Transactions
+        </h2>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+
+                        <th>Description</th>
+
+                        <th>Amount</th>
+
+                        <th>Type</th>
+
+                        <th>Category</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="transactionTable"
+                >
+
+                    <tr>
+
+                        <td colspan="5">
+
+                            Loading...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+// ============================================================
+// FASTAPI BACKEND
+// ============================================================
+
+const API =
+    "http://127.0.0.1:8000";
+
+
+// ============================================================
+// CURRENT STATEMENT
+// ============================================================
+
+let currentStatementId = null;
+
+
+// ============================================================
+// CHART VARIABLES
+// ============================================================
+
+let incomeExpenseChart = null;
+
+let monthlySpendingChart = null;
+
+
+// ============================================================
+// FORMAT MONEY
+// ============================================================
+
+function formatMoney(value) {
+
+    return "₹ " +
+
+        Number(value || 0)
+            .toLocaleString(
+                "en-IN",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+
+}
+
+
+// ============================================================
+// SHOW ERROR / STATUS
+// ============================================================
+
+function showError(message) {
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    status.style.display =
+        "block";
+
+
+    status.innerText =
+        message;
+
+}
+
+
+// ============================================================
+// HIDE STATUS
+// ============================================================
+
+function hideError() {
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    status.style.display =
+        "none";
+
+}
+
+
+// ============================================================
+// BUILD API URL
+// ============================================================
+
+function apiUrl(endpoint) {
+
+    if (
+        currentStatementId !== null
+    ) {
+
+        return `${API}${endpoint}?statement_id=${currentStatementId}`;
+
+    }
+
+
+    return `${API}${endpoint}`;
+
+}
+
+
+// ============================================================
+// UPLOAD STATEMENT
+// ============================================================
+
+async function uploadStatement() {
+
+    const fileInput =
+        document.getElementById(
+            "pdfFile"
+        );
+
+
+    const uploadButton =
+        document.getElementById(
+            "uploadButton"
+        );
+
+
+    const uploadResult =
+        document.getElementById(
+            "uploadResult"
+        );
+
+
+    hideError();
+
+
+    // --------------------------------------------------------
+    // CHECK FILE
+    // --------------------------------------------------------
+
+    if (
+        !fileInput.files ||
+        fileInput.files.length === 0
+    ) {
+
+        uploadResult.style.display =
+            "block";
+
+        uploadResult.className =
+            "upload-error";
+
+        uploadResult.innerText =
+            "Please select a PDF file first.";
+
+        return;
+
+    }
+
+
+    const file =
+        fileInput.files[0];
+
+
+    // --------------------------------------------------------
+    // CHECK PDF
+    // --------------------------------------------------------
+
+    if (
+        !file.name
+            .toLowerCase()
+            .endsWith(".pdf")
+    ) {
+
+        uploadResult.style.display =
+            "block";
+
+        uploadResult.className =
+            "upload-error";
+
+        uploadResult.innerText =
+            "Only PDF files are allowed.";
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // PREPARE FORM DATA
+    // --------------------------------------------------------
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "file",
+        file
+    );
+
+
+    // --------------------------------------------------------
+    // DISABLE BUTTON
+    // --------------------------------------------------------
+
+    uploadButton.disabled =
+        true;
+
+
+    uploadButton.innerText =
+        "Uploading...";
+
+
+    uploadResult.style.display =
+        "block";
+
+
+    uploadResult.className =
+        "";
+
+
+    uploadResult.innerText =
+        "Uploading and analyzing statement...";
+
+
+    try {
+
+        // ----------------------------------------------------
+        // SEND PDF TO FASTAPI
+        // ----------------------------------------------------
+
+        const response =
+            await fetch(
+                `${API}/upload-statement`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        // ----------------------------------------------------
+        // CHECK RESPONSE
+        // ----------------------------------------------------
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            throw new Error(
+                data.message
+                || data.error
+                || "Statement upload failed."
+            );
+
+        }
+
+
+        // ----------------------------------------------------
+        // SUCCESS
+        // ----------------------------------------------------
+
+        uploadResult.style.display =
+            "block";
+
+
+        uploadResult.className =
+            "upload-success";
+
+
+        uploadResult.innerHTML = `
+
+            <strong>
+                ✓ Statement uploaded successfully
+            </strong>
+
+            <br>
+
+            File:
+            ${data.filename || file.name}
+
+            <br>
+
+            Statement ID:
+            ${data.statement_id ?? "N/A"}
+
+            <br>
+
+            Transactions found:
+            ${data.transactions_found ?? 0}
+
+            <br>
+
+            Transactions inserted:
+            ${data.transactions_inserted ?? 0}
+
+        `;
+
+
+        // ----------------------------------------------------
+        // CLEAR FILE INPUT
+        // ----------------------------------------------------
+
+        fileInput.value =
+            "";
+
+
+        // ----------------------------------------------------
+        // RELOAD DASHBOARD
+        // ----------------------------------------------------
+
+        await loadDashboard();
+
+
+        console.log(
+            "New statement uploaded:",
+            data.statement_id
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Upload error:",
+            error
+        );
+
+
+        uploadResult.style.display =
+            "block";
+
+
+        uploadResult.className =
+            "upload-error";
+
+
+        uploadResult.innerText =
+            "Upload failed: "
+            + error.message;
+
+    }
+
+
+    finally {
+
+        uploadButton.disabled =
+            false;
+
+
+        uploadButton.innerText =
+            "Upload Statement";
+
+    }
+
+}
+
+
+// ============================================================
+// GET LATEST STATEMENT
+// ============================================================
+
+async function loadLatestStatement() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API}/latest-statement`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Latest statement API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.success &&
+            data.statement
+        ) {
+
+            currentStatementId =
+                data.statement.statement_id;
+
+
+            document.getElementById(
+                "statementFile"
+            ).innerText =
+                data.statement.file_name
+                || "Unknown file";
+
+
+            document.getElementById(
+                "statementId"
+            ).innerText =
+                "Statement ID: "
+                + currentStatementId;
+
+
+            console.log(
+                "Using latest statement:",
+                currentStatementId
+            );
+
+
+            return true;
+
+        }
+
+
+        currentStatementId =
+            null;
+
+
+        document.getElementById(
+            "statementFile"
+        ).innerText =
+            "No statement uploaded";
+
+
+        document.getElementById(
+            "statementId"
+        ).innerText =
+            "Statement ID: -";
+
+
+        return false;
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Latest statement error:",
+            error
+        );
+
+
+        showError(
+            "Unable to find latest statement."
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD SUMMARY
+// ============================================================
+
+async function loadSummary() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/summary")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Summary API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        document.getElementById(
+            "totalTransactions"
+        ).innerText =
+            data.total_transactions
+            || 0;
+
+
+        document.getElementById(
+            "totalCredit"
+        ).innerText =
+            formatMoney(
+                data.total_credit
+            );
+
+
+        document.getElementById(
+            "totalDebit"
+        ).innerText =
+            formatMoney(
+                data.total_debit
+            );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Summary error:",
+            error
+        );
+
+
+        document.getElementById(
+            "totalTransactions"
+        ).innerText =
+            "Error";
+
+
+        document.getElementById(
+            "totalCredit"
+        ).innerText =
+            "Error";
+
+
+        document.getElementById(
+            "totalDebit"
+        ).innerText =
+            "Error";
+
+
+        showError(
+            "Unable to load summary data."
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD BALANCE
+// ============================================================
+
+async function loadBalance() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/balance")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Balance API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        document.getElementById(
+            "balance"
+        ).innerText =
+            formatMoney(
+                data.balance
+            );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Balance error:",
+            error
+        );
+
+
+        document.getElementById(
+            "balance"
+        ).innerText =
+            "Error";
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD HIGHEST EXPENSE
+// ============================================================
+
+async function loadHighestExpense() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/highest-expense")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Highest expense API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data) {
+
+            document.getElementById(
+                "highestExpense"
+            ).innerText =
+                "No expense found.";
+
+            return;
+
+        }
+
+
+        document.getElementById(
+            "highestExpense"
+        ).innerHTML = `
+
+            <div class="highest-amount">
+
+                ${formatMoney(
+                    data.amount
+                )}
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Description:
+                </strong>
+
+                ${data.description || "N/A"}
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Category:
+                </strong>
+
+                ${data.category || "Other"}
+
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Date:
+                </strong>
+
+                ${data.transaction_date || "N/A"}
+
+            </div>
+
+        `;
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Highest expense error:",
+            error
+        );
+
+
+        document.getElementById(
+            "highestExpense"
+        ).innerText =
+            "Unable to load highest expense.";
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD CATEGORY SUMMARY
+// ============================================================
+
+async function loadCategorySummary() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/category-summary")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Category API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const container =
+            document.getElementById(
+                "categorySummary"
+            );
+
+
+        container.innerHTML =
+            "";
+
+
+        if (
+            !data.category_summary ||
+            data.category_summary.length === 0
+        ) {
+
+            container.innerText =
+                "No category data available.";
+
+            return;
+
+        }
+
+
+        data.category_summary.forEach(
+            item => {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                row.className =
+                    "category-row";
+
+
+                row.innerHTML = `
+
+                    <span class="category-name">
+
+                        ${item.category || "Other"}
+
+                    </span>
+
+
+                    <span class="category-amount">
+
+                        ${formatMoney(
+                            item.total_amount
+                        )}
+
+                    </span>
+
+                `;
+
+
+                container.appendChild(
+                    row
+                );
+
+            }
+        );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Category error:",
+            error
+        );
+
+
+        document.getElementById(
+            "categorySummary"
+        ).innerText =
+            "Unable to load category data.";
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD TRANSACTIONS
+// ============================================================
+
+async function loadTransactions() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/transactions")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Transactions API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const table =
+            document.getElementById(
+                "transactionTable"
+            );
+
+
+        table.innerHTML =
+            "";
+
+
+        if (
+            !data.transactions ||
+            data.transactions.length === 0
+        ) {
+
+            table.innerHTML = `
+
+                <tr>
+
+                    <td colspan="5">
+
+                        No transactions found.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+
+        }
+
+
+        data.transactions.forEach(
+            transaction => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+
+                    <td>
+
+                        ${
+                            transaction.transaction_date
+                            || ""
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            transaction.description
+                            || ""
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${formatMoney(
+                            transaction.amount
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            transaction.transaction_type
+                            || ""
+                        }
+
+                    </td>
+
+
+                    <td>
+
+                        ${
+                            transaction.category
+                            || "Other"
+                        }
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(
+                    row
+                );
+
+            }
+        );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Transactions error:",
+            error
+        );
+
+
+        document.getElementById(
+            "transactionTable"
+        ).innerHTML = `
+
+            <tr>
+
+                <td colspan="5">
+
+                    Unable to load transactions.
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+// ============================================================
+// INCOME VS EXPENSE CHART
+// ============================================================
+
+async function loadIncomeExpenseChart() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/summary")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Summary API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const ctx =
+            document.getElementById(
+                "incomeExpenseChart"
+            );
+
+
+        if (incomeExpenseChart) {
+
+            incomeExpenseChart.destroy();
+
+        }
+
+
+        incomeExpenseChart =
+            new Chart(
+                ctx,
+                {
+
+                    type: "bar",
+
+
+                    data: {
+
+                        labels: [
+
+                            "Income",
+
+                            "Expenses"
+
+                        ],
+
+
+                        datasets: [
+
+                            {
+
+                                label:
+                                    "Amount",
+
+                                data: [
+
+                                    Number(
+                                        data.total_credit
+                                        || 0
+                                    ),
+
+                                    Number(
+                                        data.total_debit
+                                        || 0
+                                    )
+
+                                ]
+
+                            }
+
+                        ]
+
+                    },
+
+
+                    options: {
+
+                        responsive: true,
+
+                        maintainAspectRatio:
+                            false,
+
+
+                        plugins: {
+
+                            legend: {
+
+                                display: false
+
+                            }
+
+                        },
+
+
+                        scales: {
+
+                            y: {
+
+                                beginAtZero:
+                                    true
+
+                            }
+
+                        }
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Income/Expense chart error:",
+            error
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// MONTHLY SPENDING CHART
+// ============================================================
+
+async function loadMonthlySpendingChart() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/monthly-spending")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Monthly spending API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const monthlyData =
+            data.monthly_spending
+            || [];
+
+
+        const months =
+            monthlyData.map(
+                item =>
+                    item.month
+            );
+
+
+        const amounts =
+            monthlyData.map(
+                item =>
+                    Number(
+                        item.total_expense
+                        || 0
+                    )
+            );
+
+
+        const ctx =
+            document.getElementById(
+                "monthlySpendingChart"
+            );
+
+
+        if (monthlySpendingChart) {
+
+            monthlySpendingChart.destroy();
+
+        }
+
+
+        monthlySpendingChart =
+            new Chart(
+                ctx,
+                {
+
+                    type: "line",
+
+
+                    data: {
+
+                        labels:
+                            months,
+
+
+                        datasets: [
+
+                            {
+
+                                label:
+                                    "Monthly Expenses",
+
+                                data:
+                                    amounts,
+
+                                tension:
+                                    0.3,
+
+                                fill:
+                                    false
+
+                            }
+
+                        ]
+
+                    },
+
+
+                    options: {
+
+                        responsive: true,
+
+                        maintainAspectRatio:
+                            false,
+
+
+                        scales: {
+
+                            y: {
+
+                                beginAtZero:
+                                    true
+
+                            }
+
+                        }
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Monthly spending chart error:",
+            error
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD FINANCIAL INSIGHTS
+// ============================================================
+
+async function loadInsights() {
+
+    try {
+
+        const response =
+            await fetch(
+                apiUrl("/insights")
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Insights API failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const container =
+            document.getElementById(
+                "insights"
+            );
+
+
+        container.innerHTML = `
+
+            <div class="insight-item">
+
+                💰 Your total income is
+
+                <strong>
+                    ${formatMoney(
+                        data.income
+                    )}
+                </strong>.
+
+            </div>
+
+
+            <div class="insight-item">
+
+                💸 Your total expenses are
+
+                <strong>
+                    ${formatMoney(
+                        data.expense
+                    )}
+                </strong>.
+
+            </div>
+
+
+            <div class="insight-item">
+
+                📊 You have spent
+
+                <strong>
+                    ${data.expense_percentage}%
+                </strong>
+
+                of your income.
+
+            </div>
+
+
+            <div class="insight-item">
+
+                🏷️ Your highest spending
+                category is
+
+                <strong>
+                    ${data.highest_category}
+                </strong>
+
+                with
+
+                <strong>
+                    ${formatMoney(
+                        data.highest_category_amount
+                    )}
+                </strong>.
+
+            </div>
+
+
+            <div class="insight-item">
+
+                🔎 Your largest expense is
+
+                <strong>
+                    ${data.highest_expense}
+                </strong>
+
+                worth
+
+                <strong>
+                    ${formatMoney(
+                        data.highest_expense_amount
+                    )}
+                </strong>.
+
+            </div>
+
+
+            <div class="insight-item">
+
+                💵 Your current balance is
+
+                <strong>
+                    ${formatMoney(
+                        data.balance
+                    )}
+                </strong>.
+
+            </div>
+
+        `;
+
+    }
+
+
+    catch (error) {
+
+        console.error(
+            "Insights error:",
+            error
+        );
+
+
+        document.getElementById(
+            "insights"
+        ).innerText =
+            "Unable to load financial insights.";
+
+    }
+
+}
+
+
+// ============================================================
+// LOAD ENTIRE DASHBOARD
+// ============================================================
+
+async function loadDashboard() {
+
+    console.log(
+        "Starting dashboard..."
+    );
+
+
+    // --------------------------------------------------------
+    // STEP 1
+    // GET LATEST STATEMENT
+    // --------------------------------------------------------
+
+    const statementFound =
+        await loadLatestStatement();
+
+
+    // --------------------------------------------------------
+    // STEP 2
+    // NO STATEMENT
+    // --------------------------------------------------------
+
+    if (!statementFound) {
+
+        document.getElementById(
+            "totalTransactions"
+        ).innerText =
+            "0";
+
+
+        document.getElementById(
+            "totalCredit"
+        ).innerText =
+            formatMoney(0);
+
+
+        document.getElementById(
+            "totalDebit"
+        ).innerText =
+            formatMoney(0);
+
+
+        document.getElementById(
+            "balance"
+        ).innerText =
+            formatMoney(0);
+
+
+        document.getElementById(
+            "highestExpense"
+        ).innerText =
+            "No statement uploaded.";
+
+
+        document.getElementById(
+            "insights"
+        ).innerText =
+            "Upload a bank statement to view insights.";
+
+
+        document.getElementById(
+            "categorySummary"
+        ).innerText =
+            "No statement available.";
+
+
+        document.getElementById(
+            "transactionTable"
+        ).innerHTML = `
+
+            <tr>
+
+                <td colspan="5">
+
+                    No statement uploaded.
+
+                </td>
+
+            </tr>
+
+        `;
+
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // STEP 3
+    // LOAD DASHBOARD DATA
+    // --------------------------------------------------------
+
+    await Promise.all([
+
+        loadSummary(),
+
+        loadBalance(),
+
+        loadHighestExpense(),
+
+        loadCategorySummary(),
+
+        loadTransactions(),
+
+        loadIncomeExpenseChart(),
+
+        loadMonthlySpendingChart(),
+
+        loadInsights()
+
+    ]);
+
+
+    console.log(
+        "Dashboard loaded for statement:",
+        currentStatementId
+    );
+
+}
+
+
+// ============================================================
+// START DASHBOARD
+// ============================================================
+
+loadDashboard();
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Bank Statement Analyzer</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js">
+
+    </script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+
+    <div class="login-card">
+
+        <h1>AI Bank Statement Analyzer</h1>
+
+        <p>Login to access your financial dashboard.</p>
+
+        <div id="loginError" class="login-error"></div>
+
+        <input
+            type="email"
+            id="loginEmail"
+            placeholder="Email"
+            autocomplete="email"
+        >
+
+        <input
+            type="password"
+            id="loginPassword"
+            placeholder="Password"
+            autocomplete="current-password"
+        >
+
+        <button
+            type="button"
+            id="loginButton"
+            onclick="loginUser()"
+        >
+            Login
+        </button>
+
+        <div class="register-link">
+            Don't have an account?
+
+            <button
+                type="button"
+                onclick="showRegisterForm()"
+            >
+                Create New Account
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- REGISTER SCREEN -->
+<div
+    id="registerScreen"
+    class="login-screen"
+    style="display: none;"
+>
+
+    <div class="login-card">
+
+        <h1>Create Account</h1>
+
+        <p>
+            Register to use your financial dashboard.
+        </p>
+
+        <div
+            id="registerError"
+            class="login-error"
+        ></div>
+
+        <div
+            id="registerSuccess"
+            class="register-success"
+        ></div>
+
+        <input
+            type="text"
+            id="registerName"
+            placeholder="Full Name"
+            autocomplete="name"
+        >
+
+        <input
+            type="email"
+            id="registerEmail"
+            placeholder="Email"
+            autocomplete="email"
+        >
+
+        <input
+            type="password"
+            id="registerPassword"
+            placeholder="Password"
+            autocomplete="new-password"
+        >
+
+        <input
+            type="password"
+            id="registerConfirmPassword"
+            placeholder="Confirm Password"
+            autocomplete="new-password"
+        >
+
+        <button
+            type="button"
+            id="registerButton"
+            onclick="registerUser()"
+        >
+            Register
+        </button>
+
+        <div class="register-link">
+            Already have an account?
+
+            <button
+                type="button"
+                onclick="showLoginForm()"
+            >
+                Login
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- DASHBOARD -->
+<div class="container">
+
+<header class="dashboard-header">
+
+    <div class="header-content">
+        <div>
+            <h1>AI Bank Statement Analyzer</h1>
+
+            <p>
+                Analyze your bank transactions,
+                understand your spending,
+                and improve your financial health.
+            </p>
+        </div>
+
+        <div class="user-section">
+
+            <div class="user-info">
+                <div class="user-name" id="userName">
+                    User
+                </div>
+
+                <div class="user-email" id="userEmail">
+                    Loading...
+                </div>
+            </div>
+
+            <button
+                type="button"
+                id="logoutButton"
+                onclick="logoutUser()"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+</header>
+
+    <div id="status"></div>
+    <!-- CURRENT STATEMENT -->
+
+    <div class="statement-info">
+
+        <div>
+            <div class="statement-title">
+                Currently Analyzing
+            </div>
+
+            <div class="statement-file" id="statementFile">
+                Loading...
+            </div>
+        </div>
+
+        <div>
+            <div class="statement-id" id="statementId">
+                Statement ID: -
+            </div>
+        </div>
+
+    </div>
+
+    <!-- UPLOAD -->
+
+    <div class="section">
+
+        <h2>Upload New Statement</h2>
+
+        <div class="upload-row">
+
+            <input
+                type="file"
+                id="statementFileInput"
+                class="file-input"
+                accept="application/pdf,.pdf"
+            >
+
+            <button
+                type="button"
+                id="uploadStatementButton"
+                class="upload-button"
+                onclick="uploadStatement()"
+            >
+                Upload Statement
+            </button>
+
+        </div>
+
+        <div id="uploadStatus"></div>
+
+    </div>
+
+    <!-- HISTORY -->
+
+    <div class="section">
+
+        <h2>Statement History</h2>
+
+        <div class="history-controls">
+
+    <select id="statementSelect" class="statement-select">
+    <option value="">No statements found</option>
+</select>
+
+    <button
+        type="button"
+        class="refresh-button"
+        onclick="loadStatements()"
+    >
+        Refresh
+    </button>
+
+    <button
+        type="button"
+        id="deleteStatementButton"
+        class="delete-button"
+        onclick="deleteSelectedStatement()"
+    >
+        Delete Statement
+    </button>
+
+</div>
+
+    <!-- MAIN KPIs -->
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Transactions</h3>
+            <div class="value" id="totalTransactions">
+                Loading...
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Total Income</h3>
+            <div class="value" id="totalCredit">
+                Loading...
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Total Expenses</h3>
+            <div class="value" id="totalDebit">
+                Loading...
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Current Balance</h3>
+            <div class="value" id="balance">
+                Loading...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- AI KPIs -->
+
+    <div class="analytics-cards">
+
+        <div class="analytics-card">
+
+            <h3>Financial Health Score</h3>
+
+            <div
+                class="analytics-value"
+                id="healthScore"
+            >
+                Loading...
+            </div>
+
+            <div class="analytics-label">
+                Overall financial health
+            </div>
+
+        </div>
+
+        <div class="analytics-card">
+
+            <h3>Savings Rate</h3>
+
+            <div
+                class="analytics-value"
+                id="savingsRate"
+            >
+                Loading...
+            </div>
+
+            <div class="analytics-label">
+                Percentage of income saved
+            </div>
+
+        </div>
+
+        <div class="analytics-card">
+
+            <h3>Total Savings</h3>
+
+            <div
+                class="analytics-value"
+                id="totalSavings"
+            >
+                Loading...
+            </div>
+
+            <div class="analytics-label">
+                Income minus expenses
+            </div>
+
+        </div>
+
+        <div class="analytics-card">
+
+            <h3>Top Spending Category</h3>
+
+            <div
+                class="analytics-value"
+                id="topCategory"
+            >
+                Loading...
+            </div>
+
+            <div class="analytics-label">
+                Highest expense category
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- AI ANALYSIS -->
+
+    <div class="section">
+
+        <h2>AI Financial Analysis</h2>
+
+        <div class="insight-item">
+
+            <strong>Spending Status</strong>
+
+            <div id="spendingStatus">
+                Loading...
+            </div>
+
+        </div>
+
+        <div class="insight-item">
+
+            <strong>Top Spending Category</strong>
+
+            <div id="analyticsCategory">
+                Loading...
+            </div>
+
+        </div>
+
+        <div class="insight-item">
+
+            <strong>Average Transaction</strong>
+
+            <div id="averageTransaction">
+                Loading...
+            </div>
+
+        </div>
+
+        <div class="insight-item">
+
+            <strong>AI Recommendation</strong>
+
+            <div id="recommendation">
+                Loading...
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- HIGHEST EXPENSE -->
+
+    <div class="section">
+
+        <h2>Highest Expense</h2>
+
+        <div
+            id="highestExpense"
+            class="highest-expense"
+        >
+            Loading...
+        </div>
+
+    </div>
+
+    <!-- CHARTS -->
+
+    <div class="chart-grid">
+
+        <div class="chart-card">
+
+            <h2>Income vs Expense</h2>
+
+            <div class="chart-description">
+                Compare total money received and spent.
+            </div>
+
+            <div class="chart-container">
+                <canvas id="incomeExpenseChart"></canvas>
+            </div>
+
+        </div>
+
+        <div class="chart-card">
+
+            <h2>Spending by Category</h2>
+
+            <div class="chart-description">
+                Understand where most of your money is going.
+            </div>
+
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MONTHLY -->
+
+    <div class="section">
+
+        <h2>Monthly Financial Trend</h2>
+
+        <div class="chart-description">
+            Track income, expenses, and savings month by month.
+        </div>
+
+        <div class="chart-container">
+            <canvas id="monthlyFinancialChart"></canvas>
+        </div>
+
+    </div>
+
+    <!-- SAVINGS + TOP CATEGORY -->
+
+    <div class="chart-grid">
+
+        <div class="chart-card">
+
+            <h2>Savings Trend</h2>
+
+            <div class="chart-description">
+                Track how much money you save each month.
+            </div>
+
+            <div class="chart-container small">
+                <canvas id="savingsChart"></canvas>
+            </div>
+
+        </div>
+
+        <div class="chart-card">
+
+            <h2>Top 5 Expense Categories</h2>
+
+            <div class="chart-description">
+                Categories responsible for the highest spending.
+            </div>
+
+            <div class="chart-container small">
+                <canvas id="topCategoryChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- DAILY SPENDING -->
+
+    <div class="section">
+
+        <h2>Daily Spending Trend</h2>
+
+        <div class="chart-description">
+            Identify days where your spending was unusually high.
+        </div>
+
+        <div class="chart-container">
+            <canvas id="dailySpendingChart"></canvas>
+        </div>
+
+    </div>
+
+    <!-- FINANCIAL INSIGHTS -->
+
+    <div class="section">
+
+        <h2>Financial Insights</h2>
+
+        <div id="insights">
+            Loading insights...
+        </div>
+
+    </div>
+
+    <!-- CATEGORY SUMMARY -->
+
+    <div class="section">
+
+        <h2>Spending Summary</h2>
+
+        <div id="categorySummary">
+            Loading...
+        </div>
+
+    </div>
+
+    <!-- TRANSACTIONS -->
+
+    <div class="section">
+
+        <h2>Transaction Explorer</h2>
+
+        <div class="transaction-controls">
+
+    <!-- Search -->
+    <input
+        type="text"
+        id="transactionSearch"
+        placeholder="Search description..."
+        oninput="applyTransactionFilters()"
+    >
+
+    <!-- Transaction Type -->
+    <select
+        id="transactionTypeFilter"
+        onchange="applyTransactionFilters()"
+    >
+        <option value="ALL">
+            All Types
+        </option>
+
+        <option value="CREDIT">
+            Credit
+        </option>
+
+        <option value="DEBIT">
+            Debit
+        </option>
+    </select>
+
+    <!-- Category -->
+    <select
+        id="transactionCategoryFilter"
+        onchange="applyTransactionFilters()"
+    >
+        <option value="ALL">
+            All Categories
+        </option>
+    </select>
+
+    <!-- Sort -->
+    <select
+        id="transactionSort"
+        onchange="applyTransactionFilters()"
+    >
+        <option value="DATE_ASC">
+            Date: Oldest First
+        </option>
+
+        <option value="DATE_DESC">
+            Date: Newest First
+        </option>
+
+        <option value="AMOUNT_DESC">
+            Amount: High to Low
+        </option>
+
+        <option value="AMOUNT_ASC">
+            Amount: Low to High
+        </option>
+    </select>
+
+    <!-- From Date -->
+    <input
+        type="date"
+        id="transactionDateFrom"
+        onchange="applyTransactionFilters()"
+        title="From Date"
+    >
+
+    <!-- To Date -->
+    <input
+        type="date"
+        id="transactionDateTo"
+        onchange="applyTransactionFilters()"
+        title="To Date"
+    >
+
+    <!-- Minimum Amount -->
+    <input
+        type="number"
+        id="transactionMinAmount"
+        placeholder="Min Amount"
+        min="0"
+        step="0.01"
+        oninput="applyTransactionFilters()"
+    >
+
+    <!-- Maximum Amount -->
+    <input
+        type="number"
+        id="transactionMaxAmount"
+        placeholder="Max Amount"
+        min="0"
+        step="0.01"
+        oninput="applyTransactionFilters()"
+    >
+
+    <!-- Clear -->
+    <button
+        type="button"
+        class="clear-filter-button"
+        onclick="clearTransactionFilters()"
+    >
+        Clear Filters
+    </button>
+
+</div>
+<div class="transaction-actions">
+
+    <button
+        type="button"
+        id="exportTransactionsButton"
+        onclick="exportTransactions()"
+    >
+        Export Transactions CSV
+    </button>
+
+</div>
+        <div
+            id="transactionCount"
+            class="transaction-count"
+        >
+            Loading transactions...
+        </div>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="transactionTable">
+
+                    <tr>
+                        <td colspan="5">
+                            Loading...
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
